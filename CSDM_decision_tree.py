@@ -1,257 +1,291 @@
 import streamlit as st
 
-# --- CONFIGURATION ---
+# --- CONFIGURATION & STYLING ---
 st.set_page_config(
-    page_title="CubeSimple CSDM Wizard", 
+    page_title="CubeSimple CSDM v4 Framework", 
     page_icon="🧊",
-    layout="centered"
+    layout="wide"
 )
 
-# --- SESSION STATE MANAGEMENT ---
+# Custom CSS to match CSDM Domain Colors
+st.markdown("""
+<style>
+    .design-domain { border-left: 5px solid #00B5AD; padding: 10px; background-color: #f0fbfc; }
+    .manage-domain { border-left: 5px solid #F2711C; padding: 10px; background-color: #fef6f1; }
+    .consume-domain { border-left: 5px solid #21BA45; padding: 10px; background-color: #f0fdf4; }
+    .foundation-domain { border-left: 5px solid #767676; padding: 10px; background-color: #f9f9f9; }
+    .stButton>button { width: 100%; border-radius: 5px; height: 3em; }
+</style>
+""", unsafe_allow_html=True)
+
+# --- SESSION STATE ---
 def init_state():
-    """Initialize the session state variables to track progress."""
-    if 'current_step' not in st.session_state:
-        st.session_state.current_step = 'q1'
+    if 'step' not in st.session_state:
+        st.session_state.step = 'start'
     if 'history' not in st.session_state:
         st.session_state.history = []
 
-def navigate_to(step):
-    """Move to the next step and save history for the back button."""
-    st.session_state.history.append(st.session_state.current_step)
-    st.session_state.current_step = step
+def navigate(next_step):
+    st.session_state.history.append(st.session_state.step)
+    st.session_state.step = next_step
 
 def go_back():
-    """Go back to the previous step."""
     if st.session_state.history:
-        st.session_state.current_step = st.session_state.history.pop()
+        st.session_state.step = st.session_state.history.pop()
 
 def restart():
-    """Reset the application to the start."""
-    st.session_state.current_step = 'q1'
+    st.session_state.step = 'start'
     st.session_state.history = []
 
 # --- UI COMPONENTS ---
 def show_header():
-    """Displays the branded header."""
-    st.title("🧊 CubeSimple CSDM Assistant")
-    st.markdown("""
-    **ServiceNow Common Service Data Model (CSDM) Classifier**
-    
-    Use this tool to determine the correct CSDM table and naming convention for your item.
-    """)
-    st.markdown("---")
-
-def show_question(title, question, examples, yes_target, no_target, tip=None):
-    """Reusable function to display a question step."""
-    st.subheader(title)
-    st.markdown(f"### {question}")
-    
-    if examples:
-        st.info(f"**Examples:** {examples}")
-    
-    if tip:
-        st.caption(f"💡 {tip}")
-    
-    st.write("") # Spacer
-    
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([1, 5])
     with col1:
-        if st.button("Yes ✅", use_container_width=True):
-            navigate_to(yes_target)
+        st.write("# 🧊")
     with col2:
-        if st.button("No ❌", use_container_width=True):
-            navigate_to(no_target)
+        st.title("CubeSimple CSDM v4 Framework")
+        st.caption("ServiceNow Common Service Data Model Decision Wizard")
+    st.divider()
 
-def show_result(table_name, domain, definition, naming_convention):
-    """Reusable function to display the final result."""
+def show_card(title, definition, litmus_test, examples, context_color="gray"):
+    """Displays a definition card with a specific domain color."""
+    colors = {
+        "design": "#00B5AD", # Teal
+        "manage": "#F2711C", # Orange
+        "consume": "#21BA45", # Green
+        "foundation": "#767676" # Grey
+    }
+    color = colors.get(context_color, "#767676")
+    
+    st.markdown(f"""
+    <div style="border: 1px solid #ddd; border-top: 5px solid {color}; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+        <h3>{title}</h3>
+        <p><strong>📖 Definition:</strong> {definition}</p>
+        <p><strong>🧪 Litmus Test:</strong> <em>{litmus_test}</em></p>
+        <p><strong>✅ Examples:</strong> {examples}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+def show_result(title, domain, domain_class, definition, example, naming_std):
+    """Displays the final result."""
+    
+    # Domain badges
+    domain_map = {
+        "Design": "design-domain",
+        "Manage Technical": "manage-domain",
+        "Sell/Consume": "consume-domain",
+        "Foundation": "foundation-domain"
+    }
+    css_class = domain_map.get(domain, "foundation-domain")
+    
     st.balloons()
-    st.success(f"### Result: {table_name}")
+    
+    st.markdown(f"""
+    <div class="{css_class}">
+        <h2>🎯 Classification: {title}</h2>
+        <h4>Domain: {domain}</h4>
+    </div>
+    """, unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("CSDM Domain", domain)
+        st.subheader("📝 Definition")
+        st.write(definition)
+        st.info(f"**Example:** {example}")
+        
     with col2:
-        st.metric("ServiceNow Table", table_name.replace(" ", "_").lower())
-    
-    st.markdown("### 📖 Definition")
-    st.write(definition)
-    
-    st.markdown("---")
-    st.subheader("📝 Naming Standard")
-    st.code(naming_convention, language="text")
-    st.caption("Please use the format above when creating this item in ServiceNow.")
-    
-    st.markdown("---")
-    if st.button("🔄 Classify Another Item", use_container_width=True):
+        st.subheader("🏷️ Naming Standard")
+        st.code(naming_std, language="text")
+        st.caption("Copy this format for your request.")
+
+    st.divider()
+    if st.button("🔄 Classify Another Item"):
         restart()
 
-# --- MAIN APP LOGIC ---
+# --- MAIN LOGIC FLOW ---
 def main():
     init_state()
     show_header()
     
-    step = st.session_state.current_step
+    step = st.session_state.step
 
-    # ---------------- QUESTIONS ----------------
-    
-    if step == 'q1':
-        show_question(
-            title="Step 1: Business Capability",
-            question="Is this a high-level business 'Ability' or 'Function'?",
-            examples="Recruiting, Payroll, Logistics",
-            tip="Does this ability exist even without IT? (e.g. We would still do 'Recruiting' even with pen and paper)",
-            yes_target='res_bus_cap',
-            no_target='q2'
+    # ---------------- START ----------------
+    if step == 'start':
+        st.subheader("Step 1: The Strategy Check")
+        show_card(
+            title="Is this a High-Level Business Ability?",
+            definition="An abstract ability of the organization (Strategy). It defines WHAT we do, not HOW.",
+            litmus_test="Does this exist even without any computers? (e.g., We would still do 'Recruiting' with pen and paper).",
+            examples="Recruiting, Payroll Processing, Logistics, Market Research",
+            context_color="design"
         )
+        c1, c2 = st.columns(2)
+        if c1.button("Yes, it's a Business Ability"): navigate('res_bus_cap')
+        if c2.button("No, it's something else"): navigate('check_container')
 
-    elif step == 'q2':
-        show_question(
-            title="Step 2: Service Portfolio",
-            question="Is this just a 'Category' or 'Folder' that holds other services?",
-            examples="HR Services, Communication Tools, IT Support",
-            tip="You cannot 'order' this directly; it is just a container to group things.",
-            yes_target='res_svc_port',
-            no_target='q3'
+    # ---------------- CONTAINER CHECK ----------------
+    elif step == 'check_container':
+        st.subheader("Step 2: The Container Check")
+        show_card(
+            title="Is this just a Folder or Container?",
+            definition="A logical grouping used for reporting. You cannot 'order' this directly.",
+            litmus_test="Is this just a bucket to hold other services?",
+            examples="HR Services, Communication Tools, IT Support Services",
+            context_color="consume"
         )
+        c1, c2 = st.columns(2)
+        if c1.button("Yes, it's a Portfolio/Container"): navigate('res_svc_port')
+        if c2.button("No, continue"): navigate('check_software')
 
-    elif step == 'q3':
-        show_question(
-            title="Step 3: Business Application",
-            question="Is this a named Software Product we buy and track?",
-            examples="Workday, Salesforce, Zoom, Microsoft Excel",
-            tip="This is the 'Brand Name' in our inventory used for planning and costs.",
-            yes_target='res_bus_app',
-            no_target='q4'
+    # ---------------- SOFTWARE BRANCH (CRITICAL SPLIT) ----------------
+    elif step == 'check_software':
+        st.subheader("Step 3: The Software Check")
+        st.write("Does this represent a Software Product?")
+        
+        c1, c2 = st.columns(2)
+        if c1.button("Yes, it involves Software"): navigate('software_split')
+        if c2.button("No, it's a Service/Action"): navigate('check_service')
+
+    elif step == 'software_split':
+        st.warning("⚠️ Critical CSDM Decision Point")
+        st.write("You selected Software. We must distinguish between the **Brand/Product** and the **Running Instance**.")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.info("Option A: The Product Concept")
+            st.markdown("""
+            * Used for Planning, Costing, & Licensing.
+            * Represents *all* instances (Dev/Test/Prod).
+            * **Litmus Test:** Is this the name on the invoice from the vendor?
+            """)
+            if st.button("It's the Product (Concept)"): navigate('res_bus_app')
+            
+        with col2:
+            st.warning("Option B: The Running Instance")
+            st.markdown("""
+            * Used for Operations, Incidents, & Changes.
+            * It has a specific Environment (Prod/Dev).
+            * **Litmus Test:** Can I log into this specific one right now?
+            """)
+            if st.button("It's the Running Instance"): navigate('res_app_svc')
+
+    # ---------------- SERVICE BRANCH ----------------
+    elif step == 'check_service':
+        st.subheader("Step 4: The Service Type")
+        show_card(
+            title="Is this an Action or Help Request?",
+            definition="Something a user interacts with to get value.",
+            litmus_test="Who is the customer requesting this?",
+            examples="Onboard Employee (User), Server Hosting (IT Admin)",
+            context_color="consume"
         )
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("### The customer is a **Business User**")
+            st.caption("(HR, Finance, Sales, Employee)")
+            if st.button("Business User"): navigate('res_bus_svc')
+            
+        with col2:
+            st.write("### The customer is an **IT Team**")
+            st.caption("(Server Admins, Developers, Network Team)")
+            if st.button("IT / Technical Team"): navigate('check_tech_svc_type')
 
-    elif step == 'q4':
-        show_question(
-            title="Step 4: Application Service",
-            question="Is this a specific RUNNING login page or environment?",
-            examples="Zoom - Production, SAP - Dev, Workday - Test",
-            tip="This is the thing that actually breaks. It has a URL or an infrastructure stack.",
-            yes_target='res_app_svc',
-            no_target='q5'
+    # ---------------- TECHNICAL SERVICE BRANCH ----------------
+    elif step == 'check_tech_svc_type':
+        st.subheader("Step 5: Technical Service Detail")
+        st.write("We know it's for IT. Is this the **Service Itself** or a specific **Tier/Offering**?")
+        
+        show_card(
+            title="Service vs. Offering",
+            definition="An Offering is a specific flavor of the service with defined commitments (SLA/Price).",
+            litmus_test="Does this have a tier (Gold/Silver) or specific SLA attached?",
+            examples="Windows Hosting (Service) vs. Gold Windows Hosting (Offering)",
+            context_color="manage"
         )
+        
+        c1, c2 = st.columns(2)
+        if c1.button("It's a Specific Tier (Offering)"): navigate('res_tech_svc_off')
+        if c2.button("It's the General Service"): navigate('res_tech_svc')
 
-    elif step == 'q5':
-        show_question(
-            title="Step 5: Business Service",
-            question="Is this 'Help' or an 'Action' a user requests to do their job?",
-            examples="Onboard Employee, Fix my Email, Request New Laptop",
-            tip="Something found in the Service Catalog that a user clicks to get help.",
-            yes_target='res_bus_svc',
-            no_target='q6'
-        )
-
-    elif step == 'q6':
-        show_question(
-            title="Step 6: Technical Service",
-            question="Is this a 'Utility' provided by IT to other IT teams?",
-            examples="Server Hosting, Storage, Wi-Fi, Database Support",
-            tip="Business users usually don't know about this; it supports other apps.",
-            yes_target='q6a',
-            no_target='q7'
-        )
-
-    elif step == 'q6a':
-        show_question(
-            title="Step 6a: Service Offering",
-            question="Is it a specific 'Plan Level' (Gold/Silver) of that utility?",
-            examples="Gold Hosting (99.9% Uptime), Standard Storage",
-            tip="Does it have specific SLA commitments attached to it?",
-            yes_target='res_tech_svc_off',
-            no_target='res_tech_svc'
-        )
-
-    elif step == 'q7':
-        show_question(
-            title="Step 7: Dynamic CI Group",
-            question="Is this an automated 'Smart List' of servers or devices?",
-            examples="All Windows Servers in NY, All Oracle Databases",
-            tip="It is not a single server, but a dynamic group based on a query.",
-            yes_target='res_dyn_ci',
-            no_target='res_unknown'
-        )
-
-    # ---------------- RESULTS ----------------
-
+    # ---------------- RESULTS: DESIGN DOMAIN ----------------
     elif step == 'res_bus_cap':
         show_result(
-            table_name="Business Capability",
-            domain="Design Domain",
-            definition="The 'What' we do. A high-level abstract capability of the organization.",
-            naming_convention="[Capability Name] (e.g., 'Recruiting')"
-        )
-
-    elif step == 'res_svc_port':
-        show_result(
-            table_name="Service Portfolio",
-            domain="Consume Domain",
-            definition="A logical container for services. Used to group services for reporting.",
-            naming_convention="[Portfolio Name] (e.g., 'HR Services')"
+            title="Business Capability",
+            domain="Design",
+            domain_class="design",
+            definition="The highest level of abstraction. Represents WHAT the business does.",
+            example="Global Recruiting, Logistics Management",
+            naming_std="[Noun] [Management/Processing]"
         )
 
     elif step == 'res_bus_app':
         show_result(
-            table_name="Business Application",
-            domain="Design Domain",
-            definition="The software we own. Used for Portfolio Management and Rationalization.",
-            naming_convention="[Vendor] [Product Name] (e.g., 'Microsoft Teams')"
+            title="Business Application",
+            domain="Design",
+            domain_class="design",
+            definition="The logical software product. Used for Portfolio Management. NOT for Incidents.",
+            example="Zoom, Salesforce, SAP S/4HANA",
+            naming_std="[Vendor] [Product Name]"
         )
 
+    # ---------------- RESULTS: MANAGE TECHNICAL DOMAIN ----------------
     elif step == 'res_app_svc':
         show_result(
-            table_name="Application Service",
-            domain="Manage Technical Domain",
-            definition="A deployed stack of the application. The operational entry point for Incident/Change.",
-            naming_convention="[App Name] - [Environment] (e.g., 'Zoom - Prod')"
-        )
-
-    elif step == 'res_bus_svc':
-        show_result(
-            table_name="Business Service",
-            domain="Consume Domain",
-            definition="A service published to business users, usually via Request Catalog.",
-            naming_convention="[Verb] [Noun] (e.g., 'Onboard Employee')"
+            title="Application Service",
+            domain="Manage Technical",
+            domain_class="manage",
+            definition="The specific deployed stack. This is the Configuration Item (CI) for Incidents.",
+            example="Zoom - Production, SAP - Dev, Workday - Test",
+            naming_std="[App Name] - [Environment]"
         )
 
     elif step == 'res_tech_svc':
         show_result(
-            table_name="Technical Service",
-            domain="Manage Technical Domain",
-            definition="A service provided by IT to IT. The technology grouping.",
-            naming_convention="[Technology] Hosting/Support (e.g., 'Windows Hosting')"
+            title="Technical Service",
+            domain="Manage Technical",
+            domain_class="manage",
+            definition="A service provided by IT to IT to support infrastructure.",
+            example="Windows Server Hosting, Storage Management",
+            naming_std="[Technology] [Hosting/Support]"
         )
-
+        
     elif step == 'res_tech_svc_off':
         show_result(
-            table_name="Technical Service Offering",
-            domain="Consume/Manage Domain",
-            definition="A specific variant of the technical service with defined commitments (SLA).",
-            naming_convention="[Service] - [Tier] (e.g., 'Windows Hosting - Gold')"
+            title="Technical Service Offering",
+            domain="Manage Technical",
+            domain_class="manage",
+            definition="A specific option of a Technical Service with SLAs/Commitments.",
+            example="Gold Windows Hosting (99.9%), Standard Storage",
+            naming_std="[Service] - [Tier/SLA]"
         )
 
-    elif step == 'res_dyn_ci':
+    # ---------------- RESULTS: CONSUME DOMAIN ----------------
+    elif step == 'res_svc_port':
         show_result(
-            table_name="Dynamic CI Group",
-            domain="Foundation / Manage",
-            definition="A group of CIs populated automatically by a CMDB Query.",
-            naming_convention="[OS/Type] - [Location/Attribute] (e.g., 'Windows - NY')"
+            title="Service Portfolio",
+            domain="Sell/Consume",
+            domain_class="consume",
+            definition="A container used to group services for reporting.",
+            example="HR Services, IT Support Services",
+            naming_std="[Department/Topic] Services"
         )
 
-    elif step == 'res_unknown':
-        st.error("### Result: Unknown / Infrastructure CI")
-        st.write("This item does not fit the standard CSDM Service/Application model.")
-        st.info("It might be a standalone Server, Router, or Printer (Infrastructure CI). Check if this item should be discovered automatically via Discovery.")
-        if st.button("🔄 Start Over", use_container_width=True):
-            restart()
+    elif step == 'res_bus_svc':
+        show_result(
+            title="Business Service",
+            domain="Sell/Consume",
+            domain_class="consume",
+            definition="A service consumed by business users to complete a task.",
+            example="Onboard New Hire, Reset Password",
+            naming_std="[Verb] [Noun]"
+        )
 
     # ---------------- FOOTER ----------------
-    
     if st.session_state.history:
-        st.markdown("---")
-        if st.button("⬅️ Back to Previous Step"):
+        st.divider()
+        if st.button("⬅️ Back"):
             go_back()
             st.rerun()
 

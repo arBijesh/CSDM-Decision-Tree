@@ -26,22 +26,28 @@ def init_state():
         st.session_state.history = []
 
 def navigate(next_step):
+    """Moves to the next step and IMMEDIATELY reruns the app."""
     st.session_state.history.append(st.session_state.step)
     st.session_state.step = next_step
+    st.rerun()  # <--- THIS FIXES THE DOUBLE CLICK ISSUE
 
 def go_back():
+    """Moves back one step and IMMEDIATELY reruns the app."""
     if st.session_state.history:
         st.session_state.step = st.session_state.history.pop()
+        st.rerun() # <--- THIS FIXES THE DOUBLE CLICK ISSUE
 
 def restart():
+    """Resets the app and IMMEDIATELY reruns."""
     st.session_state.step = 'start'
     st.session_state.history = []
+    st.rerun() # <--- THIS FIXES THE DOUBLE CLICK ISSUE
 
 # --- UI COMPONENTS ---
 def show_header():
     col1, col2 = st.columns([1, 5])
     with col1:
-        st.write("# 🧊")
+        st.markdown("# 🧊")
     with col2:
         st.title("CubeSimple CSDM v4 Framework")
         st.caption("ServiceNow Common Service Data Model Decision Wizard")
@@ -287,7 +293,6 @@ def main():
         st.divider()
         if st.button("⬅️ Back"):
             go_back()
-            st.rerun()
 
 if __name__ == "__main__":
     main()

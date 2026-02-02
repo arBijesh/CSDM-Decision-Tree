@@ -1,213 +1,164 @@
 import streamlit as st
 
 # --- CONFIGURATION ---
-st.set_page_config(
-    page_title="CubeSimple CSDM Assistant", 
-    page_icon="🧊",
-    layout="wide"
-)
+st.set_page_config(page_title="CubeSimple CSDM Classifier", page_icon="🧊", layout="wide")
 
-# --- STYLING (CSDM Colors) ---
+# --- STYLES (Based on your Framework Colors) ---
 st.markdown("""
 <style>
-    .design { border-left: 6px solid #00B5AD; background-color: #F0FBFC; padding: 15px; border-radius: 5px; }
-    .manage { border-left: 6px solid #F2711C; background-color: #FEF6F1; padding: 15px; border-radius: 5px; }
-    .consume { border-left: 6px solid #21BA45; background-color: #F0FDF4; padding: 15px; border-radius: 5px; }
-    .foundation { border-left: 6px solid #767676; background-color: #F9F9F9; padding: 15px; border-radius: 5px; }
-    .big-font { font-size: 18px !important; }
+    /* Blue - Strategy/Design */
+    .design { border-left: 6px solid #00B5AD; background-color: #F0FBFC; padding: 15px; }
+    /* Orange - Technical/Manage */
+    .manage { border-left: 6px solid #F2711C; background-color: #FEF6F1; padding: 15px; }
+    /* Green - Service Consumption */
+    .consume { border-left: 6px solid #21BA45; background-color: #F0FDF4; padding: 15px; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- STATE MANAGEMENT ---
-def init_state():
-    if 'step' not in st.session_state: st.session_state.step = 'start'
-    if 'history' not in st.session_state: st.session_state.history = []
-
+# --- NAVIGATION LOGIC ---
 def navigate(next_step):
-    st.session_state.history.append(st.session_state.step)
     st.session_state.step = next_step
     st.rerun()
 
-def go_back():
-    if st.session_state.history:
-        st.session_state.step = st.session_state.history.pop()
-        st.rerun()
-
 def restart():
     st.session_state.step = 'start'
-    st.session_state.history = []
     st.rerun()
 
-# --- CONTENT COMPONENTS ---
-def show_confusion_buster():
-    """Shows the cheat sheet at the top."""
-    with st.expander("❓ Confusion Buster: Business App vs. App Service vs. Tech Service"):
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            st.info("**Business Application** (Design)")
-            st.markdown("The **Brand Name** or Product.")
-            st.caption("e.g. 'Microsoft Excel', 'Zoom'")
-            st.markdown("*Use for: Budgeting, Licensing*")
-        with c2:
-            st.warning("**Application Service** (Manage)")
-            st.markdown("The **Running Instance**.")
-            st.caption("e.g. 'Zoom - Prod', 'SAP - Dev'")
-            st.markdown("*Use for: Incidents, Change Mgmt*")
-        with c3:
-            st.error("**Technical Service** (Manage)")
-            st.markdown("The **IT Utility**.")
-            st.caption("e.g. 'Windows Hosting', 'Storage'")
-            st.markdown("*Use for: IT Support Groups*")
-
-def show_question(title, prompt, yes_target, no_target, tips=None):
-    st.subheader(title)
-    st.markdown(f"### {prompt}")
-    if tips: st.info(tips)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("YES ✅", use_container_width=True): navigate(yes_target)
-    with col2:
-        if st.button("NO ❌", use_container_width=True): navigate(no_target)
-
-def show_result(title, domain, style_class, definition, example, naming):
-    st.markdown(f"""
-    <div class="{style_class}">
-        <h2>🎯 Result: {title}</h2>
-        <h4>Domain: {domain}</h4>
-        <hr>
-        <p class="big-font"><strong>📖 Definition:</strong> {definition}</p>
-        <p><strong>✅ Example:</strong> {example}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.write("")
-    st.subheader("📝 Naming Standard")
-    st.code(naming)
-    
-    st.divider()
-    if st.button("🔄 Classify New Item", use_container_width=True): restart()
+if 'step' not in st.session_state:
+    st.session_state.step = 'start'
 
 # --- MAIN APP ---
-def main():
-    init_state()
+st.title("🧊 CubeSimple CSDM Classifier")
+st.caption("Strictly aligned to CSDM Framework & Decision Tree")
+st.divider()
+
+step = st.session_state.step
+
+# ---------------------------------------------------------
+# STEP 1: BUSINESS CAPABILITY CHECK (Q1 from Diagram)
+# ---------------------------------------------------------
+if step == 'start':
+    st.subheader("Q1: Business Capability Check")
+    st.markdown("### Is this a high-level business 'Ability' or 'Function'?")
+    st.info("Does it exist even without IT? (e.g., Recruiting, Payroll)")
     
-    col1, col2 = st.columns([1,5])
-    with col1: st.title("🧊")
-    with col2: 
-        st.title("CSDM Classifier")
-        st.caption("CubeSimple Decision Tool")
-    
-    show_confusion_buster()
-    st.divider()
-    
-    step = st.session_state.step
+    c1, c2 = st.columns(2)
+    if c1.button("YES (It's a Capability)"): navigate('res_bus_cap')
+    if c2.button("NO"): navigate('check_portfolio')
 
-    # --- LOGIC FLOW ---
+# ---------------------------------------------------------
+# STEP 2: SERVICE PORTFOLIO CHECK (Q2 from Diagram)
+# ---------------------------------------------------------
+elif step == 'check_portfolio':
+    st.subheader("Q2: Service Portfolio Check")
+    st.markdown("### Is this just a 'Category' or 'Folder' that holds other services?")
+    st.warning("You cannot 'order' this directly. It groups other services.")
+    st.markdown("**Example from Framework:** *'Service Portfolio Digital Sales Enablement'*")
 
-    if step == 'start':
-        show_question(
-            "Step 1: Strategic Strategy",
-            "Is this a high-level Business Ability (Strategy)?",
-            "res_bus_cap", "q_container",
-            tips="Does this exist without computers? (e.g. 'Recruiting' is an ability, 'Workday' is the tool)."
-        )
+    c1, c2 = st.columns(2)
+    if c1.button("YES (It's a Portfolio)"): navigate('res_svc_port')
+    if c2.button("NO"): navigate('check_software')
 
-    elif step == 'q_container':
-        show_question(
-            "Step 2: Container Check",
-            "Is this just a Folder/Container to group things?",
-            "res_svc_port", "q_software",
-            tips="You cannot 'order' or 'fix' this directly. It just holds other items."
-        )
+# ---------------------------------------------------------
+# STEP 3: BUSINESS APPLICATION CHECK (Q3 from Diagram)
+# ---------------------------------------------------------
+elif step == 'check_software':
+    st.subheader("Q3: Business Application Check")
+    st.markdown("### Is this a named Software Product we buy and track?")
+    st.info("The 'Brand Name' in our inventory.")
+    st.markdown("**Example from Framework:** *'Business Application Client CRM'*")
 
-    elif step == 'q_software':
-        # THE CRITICAL SPLIT
-        st.subheader("Step 3: Software Check")
-        st.markdown("### Does this represent Software or an Application?")
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            if st.button("Yes, it's Software 💻", use_container_width=True):
-                navigate('split_software')
-        with c2:
-            if st.button("No, it's a Service/Action 🛠️", use_container_width=True):
-                navigate('q_service_type')
+    c1, c2 = st.columns(2)
+    if c1.button("YES (It's a Business App)"): navigate('res_bus_app')
+    if c2.button("NO"): navigate('check_app_service')
 
-    elif step == 'split_software':
-        st.error("⚠️ STOP: This is where everyone gets confused.")
-        st.markdown("### Which aspect of the software is it?")
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            st.info("Option A: The Brand (Product)")
-            st.markdown("- Used for **Budgets & Licenses**")
-            st.markdown("- Represents ALL instances (Dev/Test/Prod)")
-            st.markdown("- *Example: 'We bought Zoom'*")
-            if st.button("It's the Brand (Business App)"): navigate('res_bus_app')
-            
-        with c2:
-            st.warning("Option B: The Instance (Running)")
-            st.markdown("- Used for **Incidents & Change**")
-            st.markdown("- It is a specific environment (Prod vs Dev)")
-            st.markdown("- *Example: 'Zoom Production is down'*")
-            if st.button("It's the Instance (App Service)"): navigate('res_app_svc')
+# ---------------------------------------------------------
+# STEP 4: APPLICATION SERVICE CHECK (Q4 from Diagram)
+# ---------------------------------------------------------
+elif step == 'check_app_service':
+    st.subheader("Q4: Application Service Check")
+    st.markdown("### Is this a specific RUNNING login page or environment?")
+    st.warning("The thing that actually breaks.")
+    st.markdown("**Example from Framework:** *'Service Instance PROD - Client CRM'*")
 
-    elif step == 'q_service_type':
-        st.subheader("Step 4: Who is the Customer?")
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            st.success("The Business User (Employee)")
-            st.caption("HR, Finance, Sales users")
-            if st.button("Business User"): navigate('res_bus_svc')
-        with c2:
-            st.error("The IT Team (Technical)")
-            st.caption("Server Admins, Network Engineers")
-            if st.button("IT Team"): navigate('q_tech_offering')
+    c1, c2 = st.columns(2)
+    if c1.button("YES (It's an App Service)"): navigate('res_app_svc')
+    if c2.button("NO"): navigate('check_business_service')
 
-    elif step == 'q_tech_offering':
-        show_question(
-            "Step 5: Service vs. Offering",
-            "Is this a specific Tier/SLA (Gold/Silver)?",
-            "res_tech_off", "res_tech_svc",
-            tips="Offerings have specific prices or commitments (e.g. Gold = 99.9% Uptime)."
-        )
+# ---------------------------------------------------------
+# STEP 5: BUSINESS SERVICE CHECK (Q5 from Diagram)
+# ---------------------------------------------------------
+elif step == 'check_business_service':
+    st.subheader("Q5: Business Service Check")
+    st.markdown("### Is this 'Help' or an 'Action' a user requests to do their job?")
+    st.info("Something found in the Service Catalog.")
+    st.markdown("**Example from Framework:** *'Business Service Customer Lead Management'*")
 
-    # --- RESULTS ---
+    c1, c2 = st.columns(2)
+    if c1.button("YES (It's a Business Service)"): navigate('res_bus_svc')
+    if c2.button("NO"): navigate('check_tech_service')
 
-    elif step == 'res_bus_cap':
-        show_result("Business Capability", "Design", "design",
-                   "Abstract Strategy. The 'What' we do.", "Recruiting Management", "[Function] Management")
+# ---------------------------------------------------------
+# STEP 6: TECHNICAL SERVICE CHECK (Q6 from Diagram)
+# ---------------------------------------------------------
+elif step == 'check_tech_service':
+    st.subheader("Q6: Technical Service Check")
+    st.markdown("### Is this a 'Utility' provided by IT to other IT teams?")
+    st.info("e.g., Server Hosting, Storage, WiFi")
+    st.markdown("**Example from Framework:** *'Tech Mgmt Service Client Hosting'*")
 
-    elif step == 'res_svc_port':
-        show_result("Service Portfolio", "Consume", "consume",
-                   "A logical container for reporting.", "HR Services", "[Topic] Services")
+    c1, c2 = st.columns(2)
+    if c1.button("YES (It's Technical)"): navigate('check_tech_offering')
+    if c2.button("NO"): navigate('check_dynamic_ci')
 
-    elif step == 'res_bus_app':
-        show_result("Business Application", "Design", "design",
-                   "The Software Product/Brand. (Budgeting/Archiving)", "Microsoft Teams", "[Vendor] [Product]")
+# ---------------------------------------------------------
+# STEP 6a: OFFERING CHECK (Q6a from Diagram)
+# ---------------------------------------------------------
+elif step == 'check_tech_offering':
+    st.subheader("Q6a: Offering Check")
+    st.markdown("### Is it a specific 'Plan Level' (Gold/Silver) of that utility?")
+    st.markdown("**Example from Framework:** *'Tech Mgmt Service Offering Client Instance Backup'*")
 
-    elif step == 'res_app_svc':
-        show_result("Application Service", "Manage Tech", "manage",
-                   "The Running Instance. (Incidents/Monitoring)", "Teams - Prod - NA", "[App] - [Env]")
+    c1, c2 = st.columns(2)
+    if c1.button("YES (It's an Offering)"): navigate('res_tech_off')
+    if c2.button("NO (It's the Parent Service)"): navigate('res_tech_svc')
 
-    elif step == 'res_bus_svc':
-        show_result("Business Service", "Consume", "consume",
-                   "Action for an End-User.", "Onboard Employee", "[Verb] [Noun]")
+# ---------------------------------------------------------
+# STEP 7: DYNAMIC CI GROUP CHECK (Q7 from Diagram)
+# ---------------------------------------------------------
+elif step == 'check_dynamic_ci':
+    st.subheader("Q7: Dynamic CI Group Check")
+    st.markdown("### Is this an automated 'Smart List' of servers/devices?")
+    st.markdown("**Example from Framework:** *'Dynamic CI Group Client User Group - Win'*")
 
-    elif step == 'res_tech_svc':
-        show_result("Technical Service", "Manage Tech", "manage",
-                   "IT Utility for other IT teams.", "Windows Hosting", "[Tech] Hosting")
+    c1, c2 = st.columns(2)
+    if c1.button("YES (Dynamic Group)"): navigate('res_dyn_ci')
+    if c2.button("NO (Unknown)"): navigate('res_unknown')
 
-    elif step == 'res_tech_off':
-        show_result("Technical Service Offering", "Manage Tech", "manage",
-                   "Specific SLA Tier of a Tech Service.", "Windows Hosting - Gold", "[Service] - [Tier]")
 
-    # --- FOOTER ---
-    if st.session_state.history:
-        st.divider()
-        if st.button("⬅️ Back"): go_back()
+# --- RESULTS SCREEN (Strictly Mapped to Diagram Names) ---
+def show_result(name, domain_class, explanation):
+    st.markdown(f"""<div class="{domain_class}"><h2>✅ Result: {name}</h2><p>{explanation}</p></div>""", unsafe_allow_html=True)
+    st.write("")
+    if st.button("Start Over"): restart()
 
-if __name__ == "__main__":
-    main()
+if step == 'res_bus_cap':
+    show_result("Business Capability", "design", "Strategy/Design Domain. Defines WHAT we do.")
+elif step == 'res_svc_port':
+    show_result("Service Portfolio", "consume", "Consume Domain. A container/grouping for services.")
+elif step == 'res_bus_app':
+    show_result("Business Application", "design", "Design Domain. The Software Product (Brand).")
+elif step == 'res_app_svc':
+    show_result("Application Service", "manage", "Manage Tech Domain. The Running Instance (e.g. PROD).")
+elif step == 'res_bus_svc':
+    show_result("Business Service", "consume", "Consume Domain. An action for business users.")
+elif step == 'res_tech_svc':
+    show_result("Tech Mgmt Service", "manage", "Manage Tech Domain. IT-to-IT Utility Service.")
+elif step == 'res_tech_off':
+    show_result("Tech Mgmt Service Offering", "manage", "Manage Tech Domain. Specific SLA/Tier.")
+elif step == 'res_dyn_ci':
+    show_result("Dynamic CI Group", "manage", "Foundation/Manage Domain. Automated Group of CIs.")
+elif step == 'res_unknown':
+    st.error("Result: Unknown / Edge Case")
+    st.write("Please check if this is a standard Infrastructure CI (Server, Switch, Printer).")
+    if st.button("Start Over"): restart()

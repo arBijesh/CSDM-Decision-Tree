@@ -10,6 +10,7 @@ st.markdown("""
     .manage { border-left: 6px solid #F2711C; background-color: #FEF6F1; padding: 15px; }
     .consume { border-left: 6px solid #21BA45; background-color: #F0FDF4; padding: 15px; }
     .explanation-box { background-color: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+    .naming-box { border: 1px dashed #444; padding: 15px; border-radius: 5px; background-color: #fafafa; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -29,7 +30,7 @@ col1, col2 = st.columns([1, 6])
 with col1: st.title("🧊")
 with col2: 
     st.title("CubeSimple CSDM Classifier")
-    st.caption("Detailed Layman Explanations Enabled")
+    st.caption("Standardized Naming & Classification Tool")
 st.divider()
 
 step = st.session_state.step
@@ -47,7 +48,7 @@ if step == 'start':
     if c2.button("NO"): navigate('check_portfolio')
 
 # ---------------------------------------------------------
-# STEP 2: SERVICE PORTFOLIO CHECK (UPDATED DETAIL)
+# STEP 2: SERVICE PORTFOLIO
 # ---------------------------------------------------------
 elif step == 'check_portfolio':
     st.subheader("Step 2: Service Portfolio Check")
@@ -55,31 +56,19 @@ elif step == 'check_portfolio':
     
     st.markdown("""
     <div class="explanation-box">
-        <h4>🛑 Stop and Think: The Restaurant Analogy</h4>
-        <p>In CSDM, a <strong>Service Portfolio</strong> is like a <strong>Restaurant Menu</strong> (e.g., "The Lunch Menu").</p>
-        <ul>
-            <li>You cannot "eat" the Menu. (You cannot consume a Portfolio).</li>
-            <li>You cannot "order" the Menu itself. (You can't submit a ticket for a Portfolio).</li>
-            <li>It just <strong>lists</strong> the options available to customers.</li>
-        </ul>
-        <hr>
-        <h4>🧪 The "Broken" Test</h4>
-        <p>If a user says <em>"My [Item Name] is broken,"</em> does that make sense?</p>
-        <ul>
-            <li><strong>NO:</strong> "My <em>Digital Sales Enablement</em> is broken." (This sounds wrong. It's too broad. This is a <strong>Portfolio</strong>).</li>
-            <li><strong>YES:</strong> "My <em>Customer Lead Management</em> is broken." (This makes sense. This is a <strong>Service</strong>).</li>
-        </ul>
+        <h4>🛑 The Restaurant Analogy</h4>
+        <p>A <strong>Service Portfolio</strong> is the <strong>Menu</strong> (e.g., "Lunch Menu"). You cannot "order" the menu itself.</p>
+        <p>A <strong>Service</strong> is the <strong>Food</strong> (e.g., "Burger"). You order the food.</p>
     </div>
     """, unsafe_allow_html=True)
-    
-    st.warning("Decision: Is this item just the 'Menu' (a grouping) that users look at to find other things?")
+    st.warning("Is this item just a grouping (The Menu)?")
     
     c1, c2 = st.columns(2)
     if c1.button("YES (It is the Menu/Portfolio)"): navigate('res_svc_port')
-    if c2.button("NO (It is an actual Service/App)"): navigate('check_software')
+    if c2.button("NO (It is the Food/Service)"): navigate('check_software')
 
 # ---------------------------------------------------------
-# STEP 3: BUSINESS APPLICATION CHECK
+# STEP 3: BUSINESS APPLICATION
 # ---------------------------------------------------------
 elif step == 'check_software':
     st.subheader("Step 3: Business Application Check")
@@ -91,7 +80,7 @@ elif step == 'check_software':
     if c2.button("NO"): navigate('check_app_svc')
 
 # ---------------------------------------------------------
-# STEP 4: APPLICATION SERVICE CHECK
+# STEP 4: APPLICATION SERVICE
 # ---------------------------------------------------------
 elif step == 'check_app_svc':
     st.subheader("Step 4: Application Service Check")
@@ -103,7 +92,7 @@ elif step == 'check_app_svc':
     if c2.button("NO"): navigate('check_bus_svc')
 
 # ---------------------------------------------------------
-# STEP 5: BUSINESS SERVICE CHECK
+# STEP 5: BUSINESS SERVICE
 # ---------------------------------------------------------
 elif step == 'check_bus_svc':
     st.subheader("Step 5: Business Service Check")
@@ -115,7 +104,7 @@ elif step == 'check_bus_svc':
     if c2.button("NO"): navigate('check_tech_svc')
 
 # ---------------------------------------------------------
-# STEP 6: TECHNICAL SERVICE CHECK
+# STEP 6: TECHNICAL SERVICE
 # ---------------------------------------------------------
 elif step == 'check_tech_svc':
     st.subheader("Step 6: Technical Service Check")
@@ -126,7 +115,7 @@ elif step == 'check_tech_svc':
     if c2.button("NO"): navigate('check_dynamic')
 
 # ---------------------------------------------------------
-# STEP 6a: OFFERING CHECK
+# STEP 6a: SERVICE OFFERING
 # ---------------------------------------------------------
 elif step == 'check_offering':
     st.subheader("Step 6a: Service Offering Check")
@@ -148,20 +137,126 @@ elif step == 'check_dynamic':
     if c2.button("NO (Unknown)"): navigate('res_unknown')
 
 
-# --- RESULTS SCREEN ---
-def show_result(name, domain_class, explanation):
-    st.markdown(f"""<div class="{domain_class}"><h2>✅ Result: {name}</h2><p>{explanation}</p></div>""", unsafe_allow_html=True)
+# --- UPDATED RESULT SCREEN (With Naming Standards) ---
+def show_result(title, domain, style, definition, std_fmt, std_ex, org_fmt):
+    # 1. Classification Result
+    st.markdown(f"""
+    <div class="{style}">
+        <h2>✅ Classification: {title}</h2>
+        <p><strong>Domain:</strong> {domain}</p>
+        <p><em>{definition}</em></p>
+    </div>
+    """, unsafe_allow_html=True)
     st.write("")
+    
+    # 2. Naming Standards Columns
+    c1, c2 = st.columns(2)
+    
+    with c1:
+        st.subheader("🌍 Industry Standard")
+        st.info(f"**Format:** `{std_fmt}`")
+        st.caption(f"Example: {std_ex}")
+        
+    with c2:
+        st.subheader("🏢 CubeSimple Format")
+        st.success(f"**Template:** `{org_fmt}`")
+        st.caption("Copy this format for your CMDB request.")
+
+    # 3. Copy Button (Simulation)
+    st.divider()
     if st.button("Start Over"): restart()
 
-if step == 'res_bus_cap': show_result("Business Capability", "design", "Strategy/Design Domain. Defines WHAT we do.")
-elif step == 'res_svc_port': show_result("Service Portfolio", "consume", "Consume Domain. A container/grouping for services.")
-elif step == 'res_bus_app': show_result("Business Application", "design", "Design Domain. The Software Product (Brand).")
-elif step == 'res_app_svc': show_result("Application Service", "manage", "Manage Tech Domain. The Running Instance.")
-elif step == 'res_bus_svc': show_result("Business Service", "consume", "Consume Domain. An action for business users.")
-elif step == 'res_tech_svc': show_result("Tech Mgmt Service", "manage", "Manage Tech Domain. IT-to-IT Utility Service.")
-elif step == 'res_tech_off': show_result("Tech Mgmt Service Offering", "manage", "Manage Tech Domain. Specific SLA/Tier.")
-elif step == 'res_dyn_ci': show_result("Dynamic CI Group", "manage", "Foundation/Manage Domain. Automated Group of CIs.")
-elif step == 'res_unknown': 
+# --- RESULT DATA LOOKUP ---
+
+if step == 'res_bus_cap':
+    show_result(
+        title="Business Capability", 
+        domain="Design", 
+        style="design", 
+        definition="The 'What'. Strategy. Exists without IT.",
+        std_fmt="[Noun] Management",
+        std_ex="Recruiting Management",
+        org_fmt="[Region] - [Function] Management"
+    )
+
+elif step == 'res_svc_port':
+    show_result(
+        title="Service Portfolio", 
+        domain="Consume", 
+        style="consume", 
+        definition="The Menu. A container for services.",
+        std_fmt="[Topic] Services",
+        std_ex="HR Services",
+        org_fmt="Portfolio: [Department] Services"
+    )
+
+elif step == 'res_bus_app':
+    show_result(
+        title="Business Application", 
+        domain="Design", 
+        style="design", 
+        definition="The Product/Brand. Used for Budgeting.",
+        std_fmt="[Vendor] [Product]",
+        std_ex="Microsoft Excel",
+        org_fmt="[Vendor] [Product] (Global)"
+    )
+
+elif step == 'res_app_svc':
+    show_result(
+        title="Application Service", 
+        domain="Manage Tech", 
+        style="manage", 
+        definition="The Running Instance. Used for Incidents.",
+        std_fmt="[App] - [Environment]",
+        std_ex="Zoom - Production",
+        org_fmt="[App Name] - [Prod/Dev/Test] - [Region]"
+    )
+
+elif step == 'res_bus_svc':
+    show_result(
+        title="Business Service", 
+        domain="Consume", 
+        style="consume", 
+        definition="User Action / Request.",
+        std_fmt="[Verb] [Noun]",
+        std_ex="Onboard New Employee",
+        org_fmt="[Verb] [Noun] (Service)"
+    )
+
+elif step == 'res_tech_svc':
+    show_result(
+        title="Technical Service", 
+        domain="Manage Tech", 
+        style="manage", 
+        definition="IT Utility Service.",
+        std_fmt="[Tech] [Service Type]",
+        std_ex="Windows Hosting",
+        org_fmt="[Technology] [Hosting/Support]"
+    )
+
+elif step == 'res_tech_off':
+    show_result(
+        title="Technical Service Offering", 
+        domain="Manage Tech", 
+        style="manage", 
+        definition="Specific SLA Tier.",
+        std_fmt="[Service] - [Tier]",
+        std_ex="Windows Hosting - Gold",
+        org_fmt="[Service] - [Tier] ([SLA %])"
+    )
+
+elif step == 'res_dyn_ci':
+    show_result(
+        title="Dynamic CI Group", 
+        domain="Foundation", 
+        style="manage", 
+        definition="Automated Group of CIs.",
+        std_fmt="[Resource] - [Group Type]",
+        std_ex="All Windows Servers - NY",
+        org_fmt="Grp - [Resource Type] - [Location]"
+    )
+
+elif step == 'res_unknown':
     st.error("Unknown / Infrastructure CI")
+    st.write("This is likely a Server, Switch, or Printer.")
     if st.button("Start Over"): restart()
